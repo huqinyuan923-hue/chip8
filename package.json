@@ -6,7 +6,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "build:web": "node scripts/build-web.mjs",
-    "fetch:oracle": "node scripts/fetch-oracle.mjs"
+    "fetch:oracle": "node scripts/fetch-oracle.mjs",
+    "bench": "node scripts/bench.mjs"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
