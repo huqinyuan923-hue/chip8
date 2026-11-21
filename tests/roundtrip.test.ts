@@ -22,7 +22,7 @@ function makeRng(seed: number): () => number {
     return s;
   };
 }
-const pick = <T>(rng: () => number, arr: readonly T[]): T => arr[Math.floor(rng() * arr.length) % arr.length];
+const pick = <T>(rng: () => number, arr: readonly T[]): T => arr[Math.floor(rng() * arr.length) % arr.length] ?? (arr[0] as T);
 const rint = (rng: () => number, max: number): number => Math.floor(rng() * max) % max;
 
 /** 生成一条随机"合法"指令的汇编文本（覆盖全部已定义助记符形态）。 */
