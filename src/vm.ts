@@ -22,6 +22,8 @@ export interface Chip8Config {
   vfReset: boolean;
   clipping: boolean;
   displayWait: boolean;
+  /** CXNN 随机源（测试可注入确定性 RNG）。 */
+  rng?: () => number;
 }
 
 /** 原始 COSMAC VIP 行为（1977，oracle 验证基线）。 */
@@ -190,7 +192,7 @@ export class Chip8 {
         if (this.config.jump === 'vip') this.pc = (nnn + (this.v[0] ?? 0)) & 0xFFF;
         else this.pc = (nnn + (this.v[(nnn >> 8) & 0xF] ?? 0)) & 0xFFF;
         return;
-      case 0xC: this.v[x] = (Math.random() * 256 | 0) & nn; return; // CXNN
+      case 0xC: this.v[x] = ((this.config.rng ?? Math.random)() * 256 | 0) & nn; return; // CXNN
       case 0xD: this.draw(x, y, n); return;                 // DXYN
       case 0xE:
         if (nn === 0x9E) { if (this.keys[vx & 0xF]) this.pc = (this.pc + 2) & 0xFFF; return; }
