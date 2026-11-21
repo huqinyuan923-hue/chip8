@@ -129,12 +129,12 @@ for (const id of ['qShift', 'qJump', 'qMem', 'qVf', 'qClip', 'qWait']) {
   $(id).addEventListener('change', syncConfig);
 }
 function applyPreset(preset: typeof VIP_PRESET): void {
-  $('qShift').checked = preset.shift === 'modern';
-  $('qJump').checked = preset.jump === 'modern';
-  $('qMem').checked = preset.memory === 'modern';
-  $('qVf').checked = preset.vfReset;
-  $('qClip').checked = preset.clipping;
-  $('qWait').checked = preset.displayWait;
+  ($('qShift') as HTMLInputElement).checked = preset.shift === 'modern';
+  ($('qJump') as HTMLInputElement).checked = preset.jump === 'modern';
+  ($('qMem') as HTMLInputElement).checked = preset.memory === 'modern';
+  ($('qVf') as HTMLInputElement).checked = preset.vfReset;
+  ($('qClip') as HTMLInputElement).checked = preset.clipping;
+  ($('qWait') as HTMLInputElement).checked = preset.displayWait;
   syncConfig();
 }
 $('btnVip').addEventListener('click', () => applyPreset(VIP_PRESET));
@@ -154,11 +154,15 @@ for (const k of KEY_LABELS) {
   keyButtons.push(b);
 }
 setInterval(() => {
-  keyButtons.forEach((b, i) => b.classList.toggle('down', vm.keys[KEY_LABELS[i]] === 1));
+  keyButtons.forEach((b, i) => {
+    const k = KEY_LABELS[i];
+    if (k === undefined) return;
+    b.classList.toggle('down', vm.keys[k] === 1);
+  });
 }, 50);
 
 // ---------- 汇编器 ----------
-$('asmSrc').value = GAMES['Pong'];
+($('asmSrc') as HTMLTextAreaElement).value = GAMES['Pong'] ?? '';
 const gameSel = $('gameSel') as HTMLSelectElement;
 for (const name of Object.keys(GAMES)) {
   const opt = document.createElement('option');
@@ -168,7 +172,9 @@ for (const name of Object.keys(GAMES)) {
 }
 $('btnLoadGame').addEventListener('click', () => {
   const name = gameSel.value;
-  $('asmSrc').value = GAMES[name];
+  const src = GAMES[name];
+  if (src === undefined) throw new Error(`内置游戏缺失：${name}`);
+  ($('asmSrc') as HTMLTextAreaElement).value = src;
   assembleAndLoad();
 });
 $('btnAsm').addEventListener('click', assembleAndLoad);
