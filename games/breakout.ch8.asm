@@ -128,6 +128,7 @@ pad_done:
 
 brick_zone:
   ; ---- 砖区守卫：y ∈ [2,13]（注意 7XNN 不置 vF，必须用 sub 取借位标志）----
+  ; 守卫出口直达 draw_now（v0/v1 未被破坏，不需要 restore_ball）
   ld v7, v1
   ld vC, 2
   sub v7, vC         ; v7 = y-2；vF = (y >= 2)
@@ -139,8 +140,8 @@ brick_zone:
   jump draw_now      ; y > 13 → 出区
   ; col = x >> 2 → v8
   ld v8, v0
-  shr v8
-  shr v8
+  shr v8, v8
+  shr v8, v8
   ; row = (y-2)/3 → vB（v7 已是 y-2，循环减 3）
   ld vB, 0
 row_loop:
@@ -152,10 +153,10 @@ row_loop:
   add v7, 0xFD
   jump row_loop
 row_done:
-  shl vB
-  shl vB
-  shl vB
-  shl vB             ; row*16
+  shl vB, vB
+  shl vB, vB
+  shl vB, vB
+  shl vB, vB         ; row*16（两操作数在两代移位语义下等价）
   add vB, v8         ; offset = row*16 + col
   ; 读存活（先备份球坐标）
   ld v9, v0
@@ -172,12 +173,12 @@ row_done:
   ld v8, vB
   and v8, vC         ; col = offset & 15
   ld v7, vB
-  shr v7
-  shr v7
-  shr v7
-  shr v7             ; row = offset >> 4
-  shl v8
-  shl v8             ; 擦砖 x = col*4（v9/vA 是球坐标备份，不能占用！）
+  shr v7, v7
+  shr v7, v7
+  shr v7, v7
+  shr v7, v7         ; row = offset >> 4
+  shl v8, v8
+  shl v8, v8         ; 擦砖 x = col*4（v9/vA 是球坐标备份，不能占用！）
   ld vB, v7
   add v7, v7
   add v7, vB
@@ -192,8 +193,8 @@ set_dy_pos:
   ld v3, 1
 dy_set:
   add v6, 1
-  ld v9, 2
-  ld st, v9
+  ld vE, 2
+  ld st, vE          ; 蜂鸣（不能用 v9——v9/vA 是球坐标备份）
 restore_ball:
   ld v0, v9
   ld v1, vA
@@ -201,11 +202,11 @@ draw_now:
   ld i, ballpx
   draw v0, v1, 1     ; 画新球
 
-  ; 全清（64 砖）→ 胜利重开
+  ; 全清（64 砖）→ 胜利闪屏一次，球继续落下进入丢命循环
   se v6, 64
   jump frame
   call win_flash
-  jump main
+  jump frame
 
 ; ---- 掉命/游戏结束 ----
 game_over:
@@ -240,10 +241,10 @@ db_row:
   ld v8, 0           ; col
 db_col:
   ld v9, v7
-  shl v9
-  shl v9
-  shl v9
-  shl v9
+  shl v9, v9
+  shl v9, v9
+  shl v9, v9
+  shl v9, v9
   add v9, v8         ; offset
   ld vB, v0          ; 备份球坐标
   ld vC, v1
@@ -253,8 +254,8 @@ db_col:
   se v0, 0
   jump db_next
   ld v9, v8
-  shl v9
-  shl v9             ; x = col*4
+  shl v9, v9
+  shl v9, v9         ; x = col*4
   ld vA, v7
   add vA, vA
   add vA, v7

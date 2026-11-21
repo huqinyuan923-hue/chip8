@@ -151,11 +151,13 @@ describe('M6 · 三款游戏', () => {
       const vm = play(rom, { frames: 15, keys: () => [6], rng: seqRng(serveSeq) });
       expect(vm.v[4] ?? 0).toBeGreaterThan(29); // 初始板 x=29
     });
-    it('静态板终会丢命：过程中 v5 曾 < 3（丢命/重开循环）', () => {
+    it('板停最左必漏球：过程中 v5 曾 < 3（丢命路径可用）', () => {
       const rom = romOf('breakout.ch8.asm');
       let minLives = 3;
       play(rom, {
         frames: 1200,
+        // 前 40 帧按住 4 把板停到 x=0，之后不接球
+        keys: f => (f < 40 ? [4] : []),
         rng: seqRng(serveSeq),
         onFrame: v => { if ((v.v[5] ?? 0) < minLives) minLives = v.v[5] ?? 0; },
       });
