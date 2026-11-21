@@ -95,7 +95,7 @@ describe('M1 · 立即数与跳转', () => {
     for (let t = 0; t < 50; t++) {
       const vm = run([0xC0FF, 0xC10F]);
       expect(vm.v[0]).toBeLessThanOrEqual(0xFF);
-      expect(vm.v[1] & 0xF0).toBe(0);
+      expect((vm.v[1] ?? 0) & 0xF0).toBe(0);
     }
   });
 });
