@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.mimosa/
+.tmp/
+# GPL-3.0 的 oracle 测试 ROM 二进制：本地自备或运行 npm run fetch:oracle 下载，不入库
+tests/fixtures/oracle/
+*.ch8
