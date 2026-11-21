@@ -1,11 +1,12 @@
 // CHIP-8 解释器核心：35 个 opcode、64×32 单色屏、60Hz 定时器、keypad、蜂鸣器。
 //
-// 行为变体（两代开关）——任务书要求可配置并测试两代行为：
+// 行为变体（两代开关）——任务书要求可配置并测试两代行为。
+// VIP 基线以 oracle（Timendus 测试套件，经 Emma O2/Cadmium VIP 模式验证）为准：
 //   - shift   : 'vip'(vX = vY>>1 / vY<<1) vs 'modern'(vX = vX>>1 / vX<<1)
 //   - jump    : 'vip'(BNNN → nnn + v0)         vs 'modern'(BNNN → nnn + vX，X 取 nnn 高半字节)
 //   - memory  : 'vip'(FX55/FX65 后 I 递增)      vs 'modern'(I 不变)
-//   - vfReset : 8XY1/2/3 是否将 vF 清零（S-CHIP 系为 true，VIP 为 false）
-//   - clipping: DXYN 越界像素裁剪（true，S-CHIP 系）vs 环绕（false，VIP）
+//   - vfReset : 8XY1/2/3 将 vF 清零——VIP 与 S-CHIP 系均为 true（套件 CHIP-8 目标期望 ON）
+//   - clipping: DXYN 越界像素裁剪——VIP 与 S-CHIP 系均为 true（套件 CHIP-8 目标期望 ON）
 //   - displayWait: DXYN 等待垂直消隐、最多 60 绘制/秒（true，VIP）vs 不等待（false，S-CHIP 系）
 //
 // 固定口径（任务书差分验收 4）：未定义 opcode 一律当 NOP 执行并计数（undefinedCount），
@@ -23,13 +24,13 @@ export interface Chip8Config {
   displayWait: boolean;
 }
 
-/** 原始 COSMAC VIP 行为（1977， Historical 基线）。 */
+/** 原始 COSMAC VIP 行为（1977，oracle 验证基线）。 */
 export const VIP_PRESET: Chip8Config = {
   shift: 'vip', jump: 'vip', memory: 'vip',
-  vfReset: false, clipping: false, displayWait: true,
+  vfReset: true, clipping: true, displayWait: true,
 };
 
-/** "现代"社区惯例（CHIP-48/S-CHIP 系默认值；SUPER-CHIP 本身不在本期范围）。 */
+/** "现代"惯例（CHIP-48/S-CHIP 系默认值；SUPER-CHIP 本身不在本期范围）。 */
 export const MODERN_PRESET: Chip8Config = {
   shift: 'modern', jump: 'modern', memory: 'modern',
   vfReset: true, clipping: true, displayWait: false,

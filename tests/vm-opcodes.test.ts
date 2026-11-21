@@ -149,17 +149,18 @@ describe('M1 · ALU 与标志位', () => {
     expect(vm2.v[0]).toBe(0x00);
     expect(vm2.v[0xF]).toBe(1);
   });
-  it('vfReset 开关：逻辑运算清 vF 与不清', () => {
-    const modern = new Chip8({ vfReset: true });
-    modern.loadRom(new Uint8Array([0x81, 0x12])); // 8112: v1 = v1 & v1
-    modern.v[1] = 0xFF; modern.v[0xF] = 1;
-    modern.tick();
-    expect(modern.v[0xF]).toBe(0);
-    const vip = new Chip8();
-    vip.loadRom(new Uint8Array([0x81, 0x12]));
-    vip.v[1] = 0xFF; vip.v[0xF] = 1;
-    vip.tick();
-    expect(vip.v[0xF]).toBe(1); // VIP：逻辑运算不动 vF
+  it('vfReset 开关：默认清 vF，可关', () => {
+    // 套件 CHIP-8 目标期望逻辑运算清 vF（默认开）
+    const def = new Chip8();
+    def.loadRom(new Uint8Array([0x81, 0x12])); // 8112: v1 = v1 & v1
+    def.v[1] = 0xFF; def.v[0xF] = 1;
+    def.tick();
+    expect(def.v[0xF]).toBe(0);
+    const off = new Chip8({ vfReset: false });
+    off.loadRom(new Uint8Array([0x81, 0x12]));
+    off.v[1] = 0xFF; off.v[0xF] = 1;
+    off.tick();
+    expect(off.v[0xF]).toBe(1); // 关闭时逻辑运算不动 vF
   });
   it('未定义 opcode（8XY8-8XYD、5XYn/9XYn n≠0）当 NOP 并计数', () => {
     const vm = run([0x8128, 0x8129, 0x812A, 0x812B, 0x812C, 0x812D, 0x6111, 0x5111, 0x9111], 9);
@@ -247,23 +248,23 @@ describe('M2 · 显示（XOR 精灵 + VF 碰撞）', () => {
     expect(vm.display[8]).toBe(0);   // 0x80 只有 bit7
     expect(vm.display[71]).toBe(1);  // (7,1)
   });
-  it('VIP 环绕 vs 现代裁剪（两代行为开关）', () => {
+  it('裁剪（默认，套件基线）vs 环绕（可配置）', () => {
     const make = (cfg: Partial<Chip8Config>) => {
       const vm = new Chip8(cfg);
       vm.loadRom(new Uint8Array([0x60, 63, 0x61, 31, 0xA2, 0x08, 0xD0, 0x02, 0xFF, 0xFF]));
       for (let k = 0; k < 4; k++) vm.tick();
       return vm;
     };
-    const vip = make({});
-    expect(vip.display[31 * 64 + 63]).toBe(1);       // (63,31)
-    expect(vip.display[31 * 64 + 0]).toBe(1);        // (64,31) → 环绕到 (0,31)
-    expect(vip.display[63]).toBe(1);                 // (63,32) → 环绕到 (63,0)
-    expect(vip.v[0xF]).toBe(0);
-    const modern = make({ clipping: true });
-    expect(modern.display[31 * 64 + 63]).toBe(1);    // 只有 (63,31) 在屏内
-    expect(modern.display[31 * 64 + 0]).toBe(0);
-    expect(modern.display[63]).toBe(0);
-    expect(modern.v[0xF]).toBe(0);                   // 空白处绘制无碰撞
+    const clip = make({}); // 默认裁剪（oracle CHIP-8 基线）
+    expect(clip.display[31 * 64 + 63]).toBe(1);      // 只有 (63,31) 在屏内
+    expect(clip.display[31 * 64 + 0]).toBe(0);
+    expect(clip.display[63]).toBe(0);
+    expect(clip.v[0xF]).toBe(0);                     // 空白处绘制无碰撞
+    const wrap = make({ clipping: false });          // 关闭裁剪 → 环绕
+    expect(wrap.display[31 * 64 + 63]).toBe(1);      // (63,31)
+    expect(wrap.display[31 * 64 + 0]).toBe(1);       // (64,31) → 环绕到 (0,31)
+    expect(wrap.display[63]).toBe(1);                // (63,32) → 环绕到 (63,0)
+    expect(wrap.v[0xF]).toBe(0);
   });
   it('displayWait：绘制后空转，tickTimers 解锁', () => {
     const vm = new Chip8();
@@ -337,9 +338,11 @@ describe('配置预设', () => {
   it('VIP / MODERN 预设字段', () => {
     expect(VIP_PRESET.shift).toBe('vip');
     expect(VIP_PRESET.displayWait).toBe(true);
-    expect(VIP_PRESET.clipping).toBe(false);
+    expect(VIP_PRESET.clipping).toBe(true);
+    expect(VIP_PRESET.vfReset).toBe(true);
     expect(MODERN_PRESET.shift).toBe('modern');
     expect(MODERN_PRESET.vfReset).toBe(true);
     expect(MODERN_PRESET.memory).toBe('modern');
+    expect(MODERN_PRESET.displayWait).toBe(false);
   });
 });
